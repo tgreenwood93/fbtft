@@ -22,7 +22,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
+ * Copyright and GPL statement
+*/
 
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -32,11 +33,8 @@
 #include "fbtft.h"
 
 #define DRVNAME		"fb_ili9488"
-#define WIDTH		ILI9488_TFTWIDTH
-#define HEIGHT		ILI9488_TFTHEIGHT
-#define TXBUFLEN	(4 * PAGE_SIZE)
-#define DEFAULT_GAMMA	"1F 1A 18 0A 0F 06 45 87 32 0A 07 02 07 05 00\n" \
-			"00 25 27 05 10 09 3A 78 4D 05 18 0D 38 3A 1F"
+#define WIDTH		320
+#define HEIGHT		480
 
 /* Level 1 Commands (from the display Datasheet) */
 #define ILI9488_CMD_NOP                             0x00
@@ -194,9 +192,10 @@
 #define ILI9488_GMCTRN1 0xE1
 
 static int default_init_sequence[] = {
-	
-	-1, ILI9488_CMD_POSITIVE_GAMMA_CTRL, 0x00, 0x03, 0x09, 0x08, 0x16, 0x0A, 0x3F, 0x78, 0x4C, 0x09, 0x0A, 0x08, 0x16, 0x1A, 0x0F,
-    -1, ILI9488_CMD_NEGATIVE_GAMMA_CTRL, 0x00, 0x16, 0x19, 0x03, 0x0F, 0x05, 0x32, 0x45, 0x46, 0x04, 0x0E, 0x0D, 0x35, 0x37, 0x0F,
+	-1, ILI9488_CMD_POSITIVE_GAMMA_CTRL, 0x00, 0x03, 0x09, 0x08, 0x16, 0x0A,
+	0x3F, 0x78, 0x4C, 0x09, 0x0A, 0x08, 0x16, 0x1A, 0x0F,
+    -1, ILI9488_CMD_NEGATIVE_GAMMA_CTRL, 0x00, 0x16, 0x19, 0x03, 0x0F, 0x05,
+	0x32, 0x45, 0x46, 0x04, 0x0E, 0x0D, 0x35, 0x37, 0x0F,
     -1, ILI9488_CMD_POWER_CONTROL_1, 0x17, 0x15,
 	-1, ILI9488_CMD_POWER_CONTROL_2, 0x41,
 	-1, ILI9488_CMD_VCOM_CONTROL_1, 0x00, 0x12, 0x80,
@@ -210,10 +209,19 @@ static int default_init_sequence[] = {
 	-1, ILI9488_CMD_ADJUST_CONTROL_3, 0xA9, 0x51, 0x2C, 0x82,
 	-1, ILI9488_SLPOUT,
 	-1, 150,
-    -1, ILI9488_DISPON,
+	-1, ILI9488_DISPON,
 	-2, 20,
 	-3
 };
+
+static int init_display(struct fbtft_par *par)
+{
+	fbtft_par_dbg(DEBUG_INIT_DISPLAY, par, "%s()\n", __func__);
+
+	printk("initalizing ili9488");
+
+	return 0;
+}
 
 static void set_addr_win(struct fbtft_par *par, int xs, int ys, int xe, int ye)
 {
@@ -233,6 +241,8 @@ static void set_addr_win(struct fbtft_par *par, int xs, int ys, int xe, int ye)
 static int set_var(struct fbtft_par *par)
 {
 	fbtft_par_dbg(DEBUG_INIT_DISPLAY, par, "%s()\n", __func__);
+
+	printk("setting window orientation");
 
 	switch (par->info->var.rotate) {
 	case 0:
@@ -254,18 +264,23 @@ static int set_var(struct fbtft_par *par)
 	return 0;
 }
 
-
 static struct fbtft_display display = {
 	.regwidth = 8,
 	.width = WIDTH,
 	.height = HEIGHT,
 	.init_sequence = default_init_sequence,
 	.fbtftops = {
+		.init_display = init_display,
 		.set_addr_win = set_addr_win,
 		.set_var = set_var,
 	},
 };
 
+/*
+    This makes the driver autoload if the device is present
+    modprobe will load it from /lib/modules and not the build directory
+    If your driver changes doesn't come into effect, this could be why
+*/
 FBTFT_REGISTER_DRIVER(DRVNAME, "ilitek,ili488", &display);
 
 MODULE_ALIAS("spi:" DRVNAME);
