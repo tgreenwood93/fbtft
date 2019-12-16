@@ -281,7 +281,7 @@ static struct fbtft_display display = {
     modprobe will load it from /lib/modules and not the build directory
     If your driver changes doesn't come into effect, this could be why
 */
-FBTFT_REGISTER_DRIVER(DRVNAME, "ilitek,ili488", &display);
+FBTFT_REGISTER_DRIVER(DRVNAME, "ilitek,ili9488", &display);
 
 MODULE_ALIAS("spi:" DRVNAME);
 MODULE_ALIAS("platform:" DRVNAME);
